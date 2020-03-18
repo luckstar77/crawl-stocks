@@ -48,41 +48,41 @@ const worker = async () => {
     })
     .get();
 
-    for (let i = 0; i <= parseInt(parseDepositStocks.length / 25); i++) {
-      const list = parseDepositStocks.slice(i * 25, (i + 1) * 25);
-      if (_.isEmpty(list)) break;
+  for (let i = 0; i <= parseInt(parseDepositStocks.length / 25); i++) {
+    const list = parseDepositStocks.slice(i * 25, (i + 1) * 25);
+    if (_.isEmpty(list)) break;
 
-      await new Promise((resolve, reject) => {
-        const now = new Date();
-        docClient.batchWrite(
-          {
-            RequestItems: {
-              stocks: list.map(o => ({
-                PutRequest: {
-                  Item: {
-                    ...o,
-                    created: now.getTime(),
-                  },
+    await new Promise((resolve, reject) => {
+      const now = new Date();
+      docClient.batchWrite(
+        {
+          RequestItems: {
+            stocks: list.map(o => ({
+              PutRequest: {
+                Item: {
+                  ...o,
+                  created: now.getTime(),
                 },
-              })),
-            },
+              },
+            })),
           },
-          function(err, data) {
-            if (err) {
-              console.error(
-                'Unable to add item. Error JSON:',
-                JSON.stringify(err, null, 2),
-              );
-              console.log(list);
-              reject(err);
-            } else {
-              console.log('Added item:', JSON.stringify(data, null, 2));
-              resolve(data);
-            }
-          },
-        );
-      });
-    }
+        },
+        function(err, data) {
+          if (err) {
+            console.error(
+              'Unable to add item. Error JSON:',
+              JSON.stringify(err, null, 2),
+            );
+            console.log(list);
+            reject(err);
+          } else {
+            // console.log('Added item:', JSON.stringify(data, null, 2));
+            resolve(data);
+          }
+        },
+      );
+    });
+  }
 };
 
 exports.handler = async function(event, context) {
