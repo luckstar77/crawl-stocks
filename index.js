@@ -22,67 +22,51 @@ const worker = async () => {
     }),
   );
 
-  let parseDepositStocks = $('#example tbody tr')
-    .map((index, stock) => {
-      return {
-        symbol: $(stock)
-          .children('td')
-          .eq(0)
-          .text(),
-        company:
-          $(stock)
-            .children('td')
-            .eq(1)
-            .text() ||
-          $(stock)
-            .children('td')
-            .eq(0)
-            .text(),
-        price: parseFloat(
-          $(stock)
-            .children('td')
-            .eq(3)
-            .text(),
-        ),
-      };
-    })
-    .get();
-
-  for (let i = 0; i <= parseInt(parseDepositStocks.length / 25); i++) {
-    const list = parseDepositStocks.slice(i * 25, (i + 1) * 25);
-    if (_.isEmpty(list)) break;
-
-    await new Promise((resolve, reject) => {
-      const now = new Date();
-      docClient.batchWrite(
-        {
-          RequestItems: {
-            stocks: list.map(o => ({
-              PutRequest: {
-                Item: {
-                  ...o,
-                  created: now.getTime(),
-                },
+  await Promise.all(
+    $('#example tbody tr')
+      .map((index, stock) => {
+        return new Promise((resolve, reject) => {
+          docClient.update(
+            {
+              TableName: 'stocks',
+              Key: {
+                symbol: $(stock)
+                  .children('td')
+                  .eq(0)
+                  .text(),
               },
-            })),
-          },
-        },
-        function(err, data) {
-          if (err) {
-            console.error(
-              'Unable to add item. Error JSON:',
-              JSON.stringify(err, null, 2),
-            );
-            console.log(list);
-            reject(err);
-          } else {
-            // console.log('Added item:', JSON.stringify(data, null, 2));
-            resolve(data);
-          }
-        },
-      );
-    });
-  }
+              UpdateExpression:
+                'set price=:price, company=:company, updated=:updated',
+              ExpressionAttributeValues: {
+                ':updated': Date.now(),
+                ':price': parseFloat(
+                  $(stock)
+                    .children('td')
+                    .eq(3)
+                    .text(),
+                ),
+                ':company':
+                  $(stock)
+                    .children('td')
+                    .eq(1)
+                    .text() ||
+                  $(stock)
+                    .children('td')
+                    .eq(0)
+                    .text(),
+              },
+              ReturnValues: 'ALL_NEW',
+            },
+            function(err, data) {
+              if (err) return reject(err); // an error occurred
+              console.log(data);
+              resolve(data);
+            },
+          );
+        });
+      })
+      .get(),
+  );
 };
 
 exports.handler = async function(event, context) {
