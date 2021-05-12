@@ -16,7 +16,7 @@
     "aws-sdk": "^2.506.0",
     "cheerio": "^1.0.0-rc.3",
     "lodash": "^4.17.15",
-    "mathjs": "^6.6.1",
+    "mathjs": "^7.5.1",
     "request": "^2.88.0",
     "request-promise": "^4.2.4"
   },
